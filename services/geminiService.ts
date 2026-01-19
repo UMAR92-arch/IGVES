@@ -1,10 +1,24 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Safe access to process.env to prevent crashes on Vercel/Browsers
+const getApiKey = () => {
+  try {
+    return process?.env?.API_KEY || "";
+  } catch (e) {
+    return "";
+  }
+};
 
 export const getMarketAnalysis = async (asset: string): Promise<string> => {
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    return "API Key topilmadi. Iltimos, loyiha sozlamalarida API_KEY ni o'rnating.";
+  }
+
   try {
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Analyze the current market sentiment and provide key data for ${asset}. 
@@ -19,9 +33,9 @@ export const getMarketAnalysis = async (asset: string): Promise<string> => {
         thinkingConfig: { thinkingBudget: 0 }
       }
     });
-    return response.text || "Analysis currently unavailable.";
+    return response.text || "Tahlil ma'lumotlari mavjud emas.";
   } catch (error) {
     console.error("AI Analysis error:", error);
-    return "Failed to fetch AI analysis. Please check your API key.";
+    return "AI tahlilini olishda xatolik yuz berdi. API kalitini tekshiring.";
   }
 };

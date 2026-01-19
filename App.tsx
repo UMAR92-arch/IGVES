@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import TradingChart from './components/TradingChart';
 import { generateMockCandles, INITIAL_ASSETS } from './mockData';
 import { PriceData, AssetType } from './types';
@@ -12,20 +12,25 @@ const App: React.FC = () => {
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Initialize data
   useEffect(() => {
-    const basePrices = {
-      BTC: 65000,
-      GOLD: 2350,
-      FOREX: 1.08,
-      INFLATION: 3.2,
-      UNEMPLOYMENT: 3.8
-    };
-    setChartData(generateMockCandles(100, basePrices[selectedAsset]));
+    try {
+      const basePrices = {
+        BTC: 65000,
+        GOLD: 2350,
+        FOREX: 1.08,
+        INFLATION: 3.2,
+        UNEMPLOYMENT: 3.8
+      };
+      setChartData(generateMockCandles(100, basePrices[selectedAsset]));
+    } catch (err) {
+      console.error("Initialization error:", err);
+      setError("Dasturni yuklashda xatolik yuz berdi.");
+    }
   }, [selectedAsset]);
 
-  // Handle AI analysis
   const handleAIAnalysis = async () => {
     setIsAnalyzing(true);
     setAiAnalysis('');
@@ -35,6 +40,19 @@ const App: React.FC = () => {
   };
 
   const getPriceColor = (change: number) => change >= 0 ? 'text-emerald-500' : 'text-rose-500';
+
+  if (error) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-black text-rose-500 font-mono">
+        <div className="p-8 border border-rose-500/30 bg-rose-500/5 rounded-lg text-center">
+          <i className="fas fa-exclamation-triangle text-4xl mb-4"></i>
+          <h1 className="text-xl font-bold mb-2">XATOLIK YUZ BERDI</h1>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-rose-500 text-white rounded hover:bg-rose-600">Qayta yuklash</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-screen bg-[#050505] overflow-hidden text-neutral-200">
@@ -68,7 +86,7 @@ const App: React.FC = () => {
                 <button 
                   key={name}
                   onClick={() => setSelectedAsset(name as AssetType)}
-                  className={`flex flex-col items-start min-w-[100px] transition-all ${selectedAsset === name ? 'opacity-100 scale-105' : 'opacity-40 hover:opacity-70'}`}
+                  className={`flex flex-col items-start min-w-[100px] transition-all ${selectedAsset === name ? 'opacity-100 scale-105 border-b-2 border-emerald-500 pb-1' : 'opacity-40 hover:opacity-70'}`}
                 >
                   <div className="text-[10px] font-bold text-neutral-500 uppercase">{name}</div>
                   <div className="flex gap-2 items-baseline">
@@ -80,9 +98,9 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-             <div className="flex items-center gap-2 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded text-xs">
+             <div className="flex items-center gap-2 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded text-xs text-emerald-500">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                LIVE MARKET
+                BOZOR OCHIQLIGI
              </div>
              <button 
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -96,7 +114,7 @@ const App: React.FC = () => {
         {/* Dynamic Indicators Bar */}
         <div className="h-10 bg-[#080808] border-b border-neutral-800/50 flex items-center px-4 gap-4 text-[11px] font-medium text-neutral-400">
            <div className="flex items-center gap-2">
-              <span className="text-emerald-500">VOLUME:</span>
+              <span className="text-emerald-500">HAJM:</span>
               <span className="text-neutral-200">2.41B</span>
            </div>
            <div className="flex items-center gap-2">
@@ -104,28 +122,32 @@ const App: React.FC = () => {
               <span className="text-neutral-200">54.2</span>
            </div>
            <div className="flex items-center gap-2 ml-auto">
-              <span>H: <span className="text-emerald-400">65,920</span></span>
-              <span>L: <span className="text-rose-400">64,110</span></span>
-              <span>AVG: <span className="text-neutral-200">65,015</span></span>
+              <span>Maks: <span className="text-emerald-400">65,920</span></span>
+              <span>Min: <span className="text-rose-400">64,110</span></span>
+              <span>O'rtacha: <span className="text-neutral-200">65,015</span></span>
            </div>
         </div>
 
         {/* Chart Viewport */}
         <div className="flex-1 bg-black relative trading-view-grid">
-           <TradingChart 
-             data={chartData} 
-             assetName={selectedAsset} 
-             inspectorMode={inspectorMode}
-           />
+           {chartData.length > 0 ? (
+             <TradingChart 
+               data={chartData} 
+               assetName={selectedAsset} 
+               inspectorMode={inspectorMode}
+             />
+           ) : (
+             <div className="h-full w-full flex items-center justify-center text-neutral-600">Grafik yuklanmoqda...</div>
+           )}
            
            {/* Chart Overlays / Controls */}
            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-1 bg-zinc-900/80 backdrop-blur rounded-full border border-neutral-800 shadow-xl">
               <button className="w-8 h-8 flex items-center justify-center hover:bg-neutral-800 rounded-full"><i className="fas fa-search-minus"></i></button>
-              <div className="px-3 text-xs font-mono font-bold text-neutral-500">1H</div>
+              <div className="px-3 text-xs font-mono font-bold text-neutral-500">1S</div>
               <button className="w-8 h-8 flex items-center justify-center hover:bg-neutral-800 rounded-full"><i className="fas fa-search-plus"></i></button>
               <div className="w-[1px] h-4 bg-neutral-700 mx-1"></div>
-              <button className="px-4 py-1 text-xs bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-full transition-colors">BUY</button>
-              <button className="px-4 py-1 text-xs bg-rose-500 hover:bg-rose-400 text-white font-bold rounded-full transition-colors">SELL</button>
+              <button className="px-4 py-1 text-xs bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-full transition-colors uppercase">Sotib olish</button>
+              <button className="px-4 py-1 text-xs bg-rose-500 hover:bg-rose-400 text-white font-bold rounded-full transition-colors uppercase">Sotish</button>
            </div>
         </div>
       </div>
@@ -134,15 +156,15 @@ const App: React.FC = () => {
       {sidebarOpen && (
         <div className="w-80 border-l border-neutral-800 bg-[#0a0a0a] flex flex-col animate-in slide-in-from-right duration-300">
           <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
-            <h2 className="font-bold flex items-center gap-2">
+            <h2 className="font-bold flex items-center gap-2 uppercase tracking-tighter">
               <i className="fas fa-brain text-emerald-500"></i>
-              AI ANALYST
+              AI Tahlilchi
             </h2>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             <div className="space-y-2">
-               <label className="text-[10px] text-neutral-500 font-bold uppercase">Target Asset</label>
+               <label className="text-[10px] text-neutral-500 font-bold uppercase">Tanlangan Aktiv</label>
                <div className="w-full p-3 bg-neutral-900 border border-neutral-800 rounded-lg flex items-center justify-between">
                   <span className="text-sm font-bold text-emerald-400">{selectedAsset}</span>
                   <i className="fas fa-chart-line text-neutral-600"></i>
@@ -157,12 +179,12 @@ const App: React.FC = () => {
               {isAnalyzing ? (
                 <>
                   <i className="fas fa-circle-notch animate-spin"></i>
-                  ANALYZING...
+                  TAHLIL QILINMOQDA...
                 </>
               ) : (
                 <>
                   <i className="fas fa-bolt"></i>
-                  RUN INTELLIGENCE
+                  AI TAHLILINI BOSHLASH
                 </>
               )}
             </button>
@@ -170,23 +192,23 @@ const App: React.FC = () => {
             {aiAnalysis && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <div className="p-4 bg-neutral-900/50 border border-neutral-800 rounded-xl">
-                  <div className="text-[10px] text-emerald-500 font-bold mb-2 uppercase tracking-widest">Market Context</div>
+                  <div className="text-[10px] text-emerald-500 font-bold mb-2 uppercase tracking-widest">Bozor holati</div>
                   <div className="text-sm leading-relaxed text-neutral-300 font-light">
                     {aiAnalysis}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg">
-                    <div className="text-[10px] text-neutral-500 mb-1">Sentiment</div>
-                    <div className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                  <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
+                    <div className="text-[10px] text-neutral-500 mb-1 uppercase">Sentiment</div>
+                    <div className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1">
                       <i className="fas fa-arrow-up"></i> BULLISH
                     </div>
                   </div>
-                  <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg">
-                    <div className="text-[10px] text-neutral-500 mb-1">Volatility</div>
-                    <div className="text-xs font-bold text-amber-400 flex items-center gap-1">
-                      <i className="fas fa-tachometer-alt"></i> HIGH
+                  <div className="p-3 bg-neutral-900 border border-neutral-800 rounded-lg text-center">
+                    <div className="text-[10px] text-neutral-500 mb-1 uppercase">Xavf</div>
+                    <div className="text-xs font-bold text-amber-400 flex items-center justify-center gap-1">
+                      <i className="fas fa-tachometer-alt"></i> YUQORI
                     </div>
                   </div>
                 </div>
@@ -194,29 +216,31 @@ const App: React.FC = () => {
             )}
 
             {!aiAnalysis && !isAnalyzing && (
-              <div className="text-center py-10">
-                <i className="fas fa-robot text-4xl text-neutral-800 mb-4"></i>
-                <p className="text-sm text-neutral-500">Click the button above to start AI deep-market analysis for {selectedAsset}.</p>
+              <div className="text-center py-10 opacity-50">
+                <i className="fas fa-robot text-4xl text-neutral-700 mb-4"></i>
+                <p className="text-xs text-neutral-500 leading-relaxed px-4">
+                  {selectedAsset} bo'yicha sun'iy intellekt tahlilini ko'rish uchun yuqoridagi tugmani bosing.
+                </p>
               </div>
             )}
           </div>
 
           {/* Social / News Footer */}
           <div className="p-4 bg-zinc-900/30 border-t border-neutral-800 mt-auto">
-             <div className="text-[10px] text-neutral-500 font-bold uppercase mb-3">Live Feed</div>
+             <div className="text-[10px] text-neutral-500 font-bold uppercase mb-3">So'nggi Yangiliklar</div>
              <div className="space-y-3">
                 <div className="flex gap-3">
                    <div className="w-1 h-8 bg-emerald-500 rounded-full"></div>
                    <div>
-                      <div className="text-[11px] text-neutral-300 line-clamp-1">Fed signals pause in rate hikes for Q3</div>
-                      <div className="text-[9px] text-neutral-500">2 mins ago</div>
+                      <div className="text-[11px] text-neutral-300 line-clamp-1">Markaziy Bank stavkalarni saqlab qoldi</div>
+                      <div className="text-[9px] text-neutral-500">2 daqiqa oldin</div>
                    </div>
                 </div>
                 <div className="flex gap-3">
                    <div className="w-1 h-8 bg-rose-500 rounded-full"></div>
                    <div>
-                      <div className="text-[11px] text-neutral-300 line-clamp-1">Unemployment rates exceed projection</div>
-                      <div className="text-[9px] text-neutral-500">15 mins ago</div>
+                      <div className="text-[11px] text-neutral-300 line-clamp-1">Inflyatsiya darajasi kutilganidan past</div>
+                      <div className="text-[9px] text-neutral-500">15 daqiqa oldin</div>
                    </div>
                 </div>
              </div>
