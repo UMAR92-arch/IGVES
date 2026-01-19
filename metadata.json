@@ -1,0 +1,5 @@
+{
+  "name": "IGVES Financial Dashboard",
+  "description": "A high-performance trading dashboard featuring real-time Bitcoin, Gold, Forex rates, economic indicators like inflation and unemployment, custom technical charts (RSI, Volume), and AI-powered market analysis.",
+  "requestFramePermissions": []
+}
