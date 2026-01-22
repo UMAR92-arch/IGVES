@@ -16,7 +16,7 @@ export interface MarketStat {
   isPercent?: boolean;
 }
 
-export type AssetType = 'BTC' | 'GOLD' | 'FOREX' | 'INFLATION' | 'UNEMPLOYMENT';
+export type AssetType = 'BTC' | 'GOLD' | 'FOREX' | 'INFLATION' | 'USD_UZS' | 'UNEMPLOYMENT';
 
 export interface AIAnalysis {
   summary: string;
