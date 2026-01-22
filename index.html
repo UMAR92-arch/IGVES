@@ -14,7 +14,7 @@
             background-color: #000;
             color: #fff;
             margin: 0;
-            overflow: hidden;
+            overflow-x: hidden;
         }
         #root:empty::before {
             content: 'Loading Dashboard...';
@@ -27,14 +27,14 @@
             letter-spacing: 2px;
         }
         ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
             background: #000;
         }
         ::-webkit-scrollbar-thumb {
-            background: #333;
+            background: #222;
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
@@ -60,7 +60,6 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- Explicitly importing the entry point to ensure execution -->
     <script type="module" src="index.tsx"></script>
 </body>
 </html>
